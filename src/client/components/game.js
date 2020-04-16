@@ -5,9 +5,9 @@
 //how to update server side?
 //how to select multiple cards?
 //game model confusion.
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import { Pile } from './pile';
+import {Pile} from './pile';
 import styled from 'styled-components';
 import {ErrorMessage, ModalNotify} from './shared'
 
@@ -47,7 +47,6 @@ export const Game = ({ match }) => {
     discard: []
   });
   let [target, setTarget] = useState({card: '', pile: '', cards: []});
-  let [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
   let [errmsg, setMsg] = useState('');
   let [winmsg, setWin] = useState('');
 
@@ -55,10 +54,10 @@ export const Game = ({ match }) => {
     const getGameState = async () => {
       const response = await fetch(`/v1/game/${match.params.id}`);
       const data = await response.json();
-      if (data.stack1.length == 13 &&
-          data.stack2.length == 13 &&
-          data.stack3.length == 13 &&
-          data.stack4.length == 13 ){
+      if (data.stack1.length === 13 &&
+          data.stack2.length === 13 &&
+          data.stack3.length === 13 &&
+          data.stack4.length === 13 ){
             setWin(`Yay! you won the game!`);
             console.log('yay! you won.')
           }
@@ -91,18 +90,17 @@ export const Game = ({ match }) => {
         },
       body: JSON.stringify(data),
     });
-    let resBody = await response.json();
-    return resBody;
-  }
+    return await response.json();
+  };
 
   const onClick = async (ev, stack) => {
     ev.stopPropagation();
     //clicked on empty elements
-    if(state[stack].length == 0){
+    if(state[stack].length === 0){
       console.log('empty stack clicked');
       console.log('id is: ', stack);
-      if(stack == 'draw'){
-        if(target.card == "" && target.pile == "" && target.cards.length == 0){
+      if(stack === 'draw'){
+        if(target.card === "" && target.pile === "" && target.cards.length === 0){
           //send request to shuffle all cards back to draw deck
           const data = {
             card: 'all:cards',
@@ -118,7 +116,7 @@ export const Game = ({ match }) => {
       }
       }
       //do nothing if nothing is selected
-      else if(target.card == "" && target.pile == "" && target.cards.length == 0){
+      else if(target.card === "" && target.pile === "" && target.cards.length === 0){
         setMsg('');
         return;
       } else{
@@ -149,9 +147,9 @@ export const Game = ({ match }) => {
     } else{
     //special case if stack is "draw", set target immediately to empty and send put request, from draw to discard.
     //let target = ev.target;
-    if(stack == 'draw'){
-      if(target.card == "" && target.pile == "" && target.cards.length == 0){
-      console.log('move cards from draw to discard')
+    if(stack === 'draw'){
+      if(target.card === "" && target.pile === "" && target.cards.length === 0){
+      console.log('move cards from draw to discard');
       const data = {
         card: ev.target.id,
         src: 'draw',
@@ -179,7 +177,7 @@ export const Game = ({ match }) => {
 
 
 
-    else if(target.card == "" && target.pile == "" && target.cards.length == 0){
+    else if(target.card === "" && target.pile === "" && target.cards.length === 0){
       console.log('selecting');
       setTarget({
         card: ev.target.id,
@@ -187,7 +185,6 @@ export const Game = ({ match }) => {
         cards: state[stack]
       });
       setMsg('');
-      return;
     } else{
       const data = {
         card: target.card,
@@ -218,7 +215,7 @@ export const Game = ({ match }) => {
     console.log("gamebase clicked. State initialized");
     setTarget({card: '', pile: '', cards: []});
     setMsg('');
-  }
+  };
 
   const onAcceptResult = () => {
     history.push(`/result${match.params.id}`);
@@ -248,7 +245,7 @@ export const Game = ({ match }) => {
         <Pile cards={state.stack1} spacing={0} onClick={ev=> onClick(ev, 'stack1')} id = 'stack1'/>
         <Pile cards={state.stack2} spacing={0} onClick={ev=> onClick(ev, 'stack2')} id = 'stack2'/>
         <Pile cards={state.stack3} spacing={0} onClick={ev=> onClick(ev, 'stack3')} id = 'stack3' />
-        <Pile cards={state.stack4} spacing={0} onClick={ev=> onClick(ev, 'stack4')}id = 'stack4' />
+        <Pile cards={state.stack4} spacing={0} onClick={ev=> onClick(ev, 'stack4')} id = 'stack4' />
         <CardRowGap />
         <Pile cards={state.draw} spacing={0} onClick={ev=> onClick(ev, 'draw')} id = 'draw'/>
         <Pile cards={state.discard} spacing={0} onClick={ev=> onClick(ev, 'discard')} id = 'discard'/>

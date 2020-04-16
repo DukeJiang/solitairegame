@@ -120,13 +120,13 @@ module.exports = app => {
     let card_value = card.slice(card.indexOf(':') + 1);
     
     Object.keys(state).forEach( key => {
-      if (state[key].suit == card_suit && state[key].value == card_value){
+      if (state[key].suit === card_suit && state[key].value === card_value){
         return state[key].up;
       }
 
     });
     return {error: "card not found"};
-  }
+  };
 
   app.put("/v1/game/:gameID",async (req, res) => {
     //query game from database
@@ -135,31 +135,31 @@ module.exports = app => {
     let state = query.state.toJSON();
     let drawCount = query.drawCount;
 
-    //special case when need to shuffle all cards in waste back to draw
-    if(req.session.user != user.username){
-      return res.status(401).send({error: 'unauthorized'});
-    }
-    if(req.body.card == 'all:cards'){
-      while (state.discard.length != 0){
+    // //special case when need to shuffle all cards in waste back to draw
+    // if(req.session.user !== user.username){
+    //   return res.status(401).send({error: 'unauthorized'});
+    // }
+    if(req.body.card === 'all:cards'){
+      while (state.discard.length !== 0){
         let card_top = state.discard.pop();
         card_top.up = false;
         state.draw.push(card_top);
       }
       query.state = state;
-      state.draw
+      state.draw;
       query.score -= 100;
       await query.save();
       return res.status(200).send(state);
     }
 
     //check if card is faced up
-    if (!isUp(req.body.card, state) && req.src != 'draw'){
+    if (!isUp(req.body.card, state) && req.src !== 'draw'){
       return res.status(400).send({error: "card is faced down"});
     }
     //update database
     //if user wins, return message
     const validation = validateMove(state, req.body, drawCount);
-    if (validation.error != undefined){
+    if (validation.error !== undefined){
       return res.status(400).send({error: validation.error});
     } else {
       query.state = validation.state;
@@ -168,9 +168,6 @@ module.exports = app => {
       await query.save();
       return res.status(200).send(validation.state);
     }
-
-
-
   });
 
   // Provide end-point to request shuffled deck of cards and initial state - for testing

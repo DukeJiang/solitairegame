@@ -97,26 +97,18 @@ const validateValueAndSuit = (card_suit, card_value, deck) => {
   'jack': 'queen',
   'queen': 'king',
 };
-  if(deck.length == 0){
-    if(card_value != 'king'){
-      return false;
-    } else{
-      return true;
-    }
+  if(deck.length === 0){
+    return card_value === 'king';
   } else{
     const top_card = deck[deck.length - 1];
-    if (top_card.value != valueLookUp2[card_value]){
+    if (top_card.value !== valueLookUp2[card_value]){
       return false;
-    } else if ((card_suit == 'hearts' || card_suit == 'diamonds') && (top_card.suit == 'hearts' || top_card.suit == 'diamonds')){
+    } else if ((card_suit === 'hearts' || card_suit === 'diamonds') && (top_card.suit === 'hearts' || top_card.suit === 'diamonds')){
       return false;
     }
-    else if ((card_suit == 'spades' || card_suit == 'clubs') && (top_card.suit == 'spades' || top_card.suit == 'clubs')){
-      return false;
-    } else{
-      return true;
-    }
+    else return !((card_suit === 'spades' || card_suit === 'clubs') && (top_card.suit === 'spades' || top_card.suit === 'clubs'));
   }
-}
+};
 
 let validateMove = (state, requestedMove, drawCount) => {
   let score = 0;
@@ -152,24 +144,24 @@ let validateMove = (state, requestedMove, drawCount) => {
 
   //if card is being moved from draw to discard
   // TODO: cycle back from discard  if draw is empty
-  if(src == 'draw'){
-    if (dst != 'discard'){
+  if(src === 'draw'){
+    if (dst !== 'discard'){
       return error;
     } else{
-      if(drawCount == 1){
+      if(drawCount === 1){
   
       let card_moved = returnState[src].pop();
       card_moved.up = true;
       returnState[dst].push(card_moved);
       move.cards.push(card_moved);
-      } else if (drawCount == 3){
-        console.log('here')
+      } else if (drawCount === 3){
+        console.log('here');
         for(let i = 0; i < 3; i++){
           let card_moved = returnState[src].pop();
           card_moved.up = true;
           returnState[dst].push(card_moved);
           move.cards.push(card_moved);
-        };
+        }
         
       }
       return {state: returnState, score: score, move: move};
@@ -178,25 +170,25 @@ let validateMove = (state, requestedMove, drawCount) => {
   }
 
   //if card is being moved to the stack from discard , other stacks, or piles
-  else if (dst.indexOf('stack') != -1){
+  else if (dst.indexOf('stack') !== -1){
     //must be the top-most card
     const top_card = src_pile[src_pile.length - 1];
-    if (top_card.value != card_value || top_card.suit != card_suit){
+    if (top_card.value !== card_value || top_card.suit !== card_suit){
       return {error: 'must move the topmost card to foundation!'};
     }
     //check if suit is correct
-    else if (card_suit != suitLookUp[dst.substring(5)]){
+    else if (card_suit !== suitLookUp[dst.substring(5)]){
       return {error: 'wrong suit!'};
     }
 
     //check if value is correct
-    else if ((dst_pile.length == 0 && card_value != "ace") || (dst_pile.length!= 0 && dst_pile[dst_pile.length - 1].value != valueLookUp[card_value])){
+    else if ((dst_pile.length === 0 && card_value !== "ace") || (dst_pile.length!== 0 && dst_pile[dst_pile.length - 1].value !== valueLookUp[card_value])){
       return {error: 'value is invalid. Must be in ascending order.'};
     }
     else{
     let card_moved = returnState[src].pop();
 
-    if(returnState[src].length != 0){
+    if(returnState[src].length !== 0){
       returnState[src][returnState[src].length -1].up = true;
     
     }
@@ -208,7 +200,7 @@ let validateMove = (state, requestedMove, drawCount) => {
   } 
 
   //if card is being moved to a pile from stacks, other piles, or discard
-  else if (dst.indexOf('pile') != -1){
+  else if (dst.indexOf('pile') !== -1){
     //from another pile, move all cards below the target
 
     if(!validateValueAndSuit(card_suit, card_value, dst_pile)){
@@ -216,12 +208,12 @@ let validateMove = (state, requestedMove, drawCount) => {
     }
 
     //check if values
-    if (src.indexOf('pile') != -1){
+    if (src.indexOf('pile') !== -1){
 
       let index = 0;
       for (let i = 0; i < state[src].length; ++i){
         let cur = state[src][i];
-        if (cur.suit == card_suit && cur.value == card_value){
+        if (cur.suit === card_suit && cur.value === card_value){
           index = i;
           break;
         }
@@ -229,12 +221,12 @@ let validateMove = (state, requestedMove, drawCount) => {
 
       let add_array = state[src].slice(index);
       returnState[src] = returnState[src].slice(0, index);
-          if(returnState[src].length != 0){
+          if(returnState[src].length !== 0){
             returnState[src][returnState[src].length -1].up = true;
       }
       
       returnState[dst] = returnState[dst].concat(add_array);
-      score = 5
+      score = 5;
       move.cards = add_array;
       //console.log(returnState);
       return {state: returnState, score: score, move: move};
@@ -243,15 +235,15 @@ let validateMove = (state, requestedMove, drawCount) => {
     //from stack or discard
     //check if it is the topmost card
     else{
-      if(src_pile[src_pile.length - 1].value != card_value || src_pile[src_pile.length - 1].suit != card_suit){
+      if(src_pile[src_pile.length - 1].value !== card_value || src_pile[src_pile.length - 1].suit !== card_suit){
         return {error: 'color or value not matched!'};
       }
       
-      const card_moved = returnState[src].pop()
+      const card_moved = returnState[src].pop();
     returnState[dst].push(card_moved);
     move.cards.push(card_moved);
 
-    score = dst == 'discard'? 5: -15;
+    score = dst === 'discard'? 5: -15;
 
     return {state: returnState, score: score, move: move};
     }
