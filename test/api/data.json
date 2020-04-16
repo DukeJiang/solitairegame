@@ -1,0 +1,19 @@
+{
+  "users": {
+    "primary": {
+      "username": "primaryuser",
+      "primary_email": "verify_primary@test.com",
+      "password": "!12345abcdeF",
+      "first_name": "foo",
+      "last_name": "bar",
+      "city": "Nashville"
+    }
+  },
+  "games": {
+    "primary": {
+      "game": "klondike",
+      "color": "red",
+      "draw": "Draw 1"
+    }
+  }
+}
