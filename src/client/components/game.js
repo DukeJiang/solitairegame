@@ -58,8 +58,7 @@ export const Game = ({ match }) => {
           data.stack2.length === 13 &&
           data.stack3.length === 13 &&
           data.stack4.length === 13 ){
-            setWin(`Yay! you won the game!`);
-            console.log('yay! you won.')
+            setWin(`You win`);
           }
       setState({
         pile1: data.pile1,
@@ -126,18 +125,14 @@ export const Game = ({ match }) => {
           dst: stack
         };
         console.log(data);
-        console.log('moving cards');
-        //send PUT request
+        console.log('move request');
 
         let resBody = await sendData(data);
 
         if (resBody.error){
           setMsg(resBody.error);
-        } else{
-          setMsg('');
-      }
+        }
 
-      //initialize state
       }
       setTarget({
         card:'',
@@ -238,8 +233,7 @@ export const Game = ({ match }) => {
       
 
       <div>
-        The 4 stacks from left to right are 
-        <span><b> hearts, diamonds, clubs, and spades,</b></span> respectively.
+        <span><b> ❤️          💎           ♦️         ♣️</b></span>
       </div>
       <CardRow>
         <Pile cards={state.stack1} spacing={0} onClick={ev=> onClick(ev, 'stack1')} id = 'stack1'/>
