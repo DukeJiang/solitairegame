@@ -233,7 +233,8 @@ export const Game = ({ match }) => {
       
 
       <div>
-        <span><b> ❤️          💎           ♦️         ♣️</b></span>
+        <span><b> ❤️                                                                      💎
+                  ♦️                                                                      ♣️</b></span>
       </div>
       <CardRow>
         <Pile cards={state.stack1} spacing={0} onClick={ev=> onClick(ev, 'stack1')} id = 'stack1'/>
