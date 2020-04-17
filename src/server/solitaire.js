@@ -199,15 +199,14 @@ let validateMove = (state, request, drawCount) => {
         }
       }
 
-      let add_array = state[request.src].slice(index);
       state[request.src] = state[request.src].slice(0, index);
           if(state[request.src].length !== 0){
             state[request.src][state[request.src].length -1].up = true;
       }
 
-      state[request.dst] = state[request.dst].concat(add_array);
+      state[request.dst] = state[request.dst].concat(state[request.src].slice(index));
       score = 5;
-      moveRequest.cards = add_array;
+      moveRequest.cards = state[request.src].slice(index);
       return {state: state, score: score, move: moveRequest};
     }
 
