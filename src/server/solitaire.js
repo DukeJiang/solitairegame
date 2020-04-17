@@ -110,54 +110,49 @@ const validateValueAndSuit = (card_suit, card_value, deck) => {
   }
 };
 
-let validateMove = (state, requestedMove, drawCount) => {
+let validateMove = (state, request, drawCount) => {
   let score = 0;
-  console.log(requestedMove);
-  let card = requestedMove.card;
-  let src = requestedMove.src;
-  let dst = requestedMove.dst;
+  let dst = request.dst;
   let returnState = state;
-  let card_suit = card.slice(0, card.indexOf(':'));
-  let card_value = card.slice(card.indexOf(':') + 1);
+  let card_suit = request.card.slice(0, request.card.indexOf(':'));
+  let card_value = request.card.slice(request.card.indexOf(':') + 1);
   const error = {error: "invalid move"};
-  const valueLookUp = {
-                      '2': 'ace', 
-                      '3': '2',
-                      '4': '3',
-                      '5': '4',
-                      '6': '5',
-                      '7': '6',
-                      '8': '7',
-                      '9': '8',
-                      '10': '9',
-                      'jack': '10',
-                      'queen': 'jack',
-                      'king': 'queen'
+  const validAncestor = {
+    '2': 'ace',
+    '3': '2',
+    '4': '3',
+    '5': '4',
+    '6': '5',
+    '7': '6',
+    '8': '7',
+    '9': '8',
+    '10': '9',
+    'jack': '10',
+    'queen': 'jack',
+    'king': 'queen'
   };
 
   const suitLookUp = {'1': 'hearts', '2': 'diamonds', '3': 'clubs', '4': 'spades'};
 
-  let move = {cards: [], src: src, dst: dst};
+  let move = {cards: [], src: request.src, dst: dst};
 
-  const src_pile = state[src];
+  const src_pile = state[request.src];
   const dst_pile = state[dst];
 
-  //if card is being moved from draw to discard
-  // TODO: cycle back from discard  if draw is empty
-  if(src === 'draw'){
+  if(request.src === 'draw'){
     if (dst !== 'discard'){
       return error;
     } else{
       if(drawCount === 1){
   
-      let card_moved = returnState[src].pop();
+      let card_moved = returnState[request.src].pop();
       card_moved.up = true;
       returnState[dst].push(card_moved);
       move.cards.push(card_moved);
       } else if (drawCount === 3){
         console.log('here');
         for(let i = 0; i < 3; i++){
-          let card_moved = returnState[src].pop();
+          let card_moved = returnState[request.src].pop();
           card_moved.up = true;
           returnState[dst].push(card_moved);
           move.cards.push(card_moved);
@@ -182,14 +177,14 @@ let validateMove = (state, requestedMove, drawCount) => {
     }
 
     //check if value is correct
-    else if ((dst_pile.length === 0 && card_value !== "ace") || (dst_pile.length!== 0 && dst_pile[dst_pile.length - 1].value !== valueLookUp[card_value])){
+    else if ((dst_pile.length === 0 && card_value !== "ace") || (dst_pile.length!== 0 && dst_pile[dst_pile.length - 1].value !== validAncestor[card_value])){
       return {error: 'value is invalid. Must be in ascending order.'};
     }
     else{
-    let card_moved = returnState[src].pop();
+    let card_moved = returnState[request.src].pop();
 
-    if(returnState[src].length !== 0){
-      returnState[src][returnState[src].length -1].up = true;
+    if(returnState[request.src].length !== 0){
+      returnState[request.src][returnState[request.src].length -1].up = true;
     
     }
     returnState[dst].push(card_moved);
@@ -208,27 +203,26 @@ let validateMove = (state, requestedMove, drawCount) => {
     }
 
     //check if values
-    if (src.indexOf('pile') !== -1){
+    if (request.src.indexOf('pile') !== -1){
 
       let index = 0;
-      for (let i = 0; i < state[src].length; ++i){
-        let cur = state[src][i];
+      for (let i = 0; i < state[request.src].length; ++i){
+        let cur = state[request.src][i];
         if (cur.suit === card_suit && cur.value === card_value){
           index = i;
           break;
         }
       }
 
-      let add_array = state[src].slice(index);
-      returnState[src] = returnState[src].slice(0, index);
-          if(returnState[src].length !== 0){
-            returnState[src][returnState[src].length -1].up = true;
+      let add_array = state[request.src].slice(index);
+      returnState[request.src] = returnState[request.src].slice(0, index);
+          if(returnState[request.src].length !== 0){
+            returnState[request.src][returnState[request.src].length -1].up = true;
       }
       
       returnState[dst] = returnState[dst].concat(add_array);
       score = 5;
       move.cards = add_array;
-      //console.log(returnState);
       return {state: returnState, score: score, move: move};
     }
 
@@ -239,7 +233,7 @@ let validateMove = (state, requestedMove, drawCount) => {
         return {error: 'color or value not matched!'};
       }
       
-      const card_moved = returnState[src].pop();
+      const card_moved = returnState[request.src].pop();
     returnState[dst].push(card_moved);
     move.cards.push(card_moved);
 

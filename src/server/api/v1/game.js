@@ -115,58 +115,46 @@ module.exports = app => {
     }
   });
 
-  const isUp = (card, state) => {
-    let card_suit = card.slice(0, card.indexOf(':'));
-    let card_value = card.slice(card.indexOf(':') + 1);
-    
+  const faceUp = (card, state) => {
     Object.keys(state).forEach( key => {
-      if (state[key].suit === card_suit && state[key].value === card_value){
+      if (state[key].suit === card.slice(0, card.indexOf(':'))
+          && state[key].value === card.slice(card.indexOf(':') + 1)){
         return state[key].up;
       }
 
     });
-    return {error: "card not found"};
+    return {error: "Wrong card"};
   };
 
   app.put("/v1/game/:gameID",async (req, res) => {
-    //query game from database
-    let query = await app.models.Game.findById(req.params.gameID);
-    let user = await app.models.User.findById(query.owner);
-    let state = query.state.toJSON();
-    let drawCount = query.drawCount;
+    let currentGame = await app.models.Game.findById(req.params.gameID);
+    let gameState = currentGame.state.toJSON();
 
-    // //special case when need to shuffle all cards in waste back to draw
-    // if(req.session.user !== user.username){
-    //   return res.status(401).send({error: 'unauthorized'});
-    // }
-    if(req.body.card === 'all:cards'){
-      while (state.discard.length !== 0){
-        let card_top = state.discard.pop();
+    //send error when user try to move down facing card
+    if (!faceUp(req.body.card, gameState) && req.src !== 'draw'){
+      return res.status(400).send({error: "cannot move card facing down"});
+    } else if(req.body.card === 'deck'){
+      while (gameState.discard.length !== 0){
+        let card_top = gameState.discard.pop();
         card_top.up = false;
-        state.draw.push(card_top);
+        gameState.draw.push(card_top);
       }
-      query.state = state;
-      state.draw;
-      query.score -= 100;
-      await query.save();
-      return res.status(200).send(state);
+      currentGame.score -= 100;
+      currentGame.state = gameState;
+      await currentGame.save();
+      return res.status(200).send(gameState);
     }
 
-    //check if card is faced up
-    if (!isUp(req.body.card, state) && req.src !== 'draw'){
-      return res.status(400).send({error: "card is faced down"});
-    }
-    //update database
-    //if user wins, return message
-    const validation = validateMove(state, req.body, drawCount);
-    if (validation.error !== undefined){
-      return res.status(400).send({error: validation.error});
+    //validate move and post
+    const postvalidate = validateMove(gameState, req.body, currentGame.drawCount);
+    if (postvalidate.error !== undefined){
+      return res.status(400).send({error: postvalidate.error});
     } else {
-      query.state = validation.state;
-      query.score += validation.score;
-      query.moves += 1;
-      await query.save();
-      return res.status(200).send(validation.state);
+      currentGame.state = postvalidate.state;
+      currentGame.score += postvalidate.score;
+      currentGame.moves += 1;
+      await currentGame.save();
+      return res.status(200).send(postvalidate.state);
     }
   });
 

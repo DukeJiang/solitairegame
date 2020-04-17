@@ -17,7 +17,7 @@ export function GravHash(email, size) {
   return `https://www.gravatar.com/avatar/${hash}?size=${size}`;
 }
 
-const fontColor = '#c4a1a1';
+const fontColor = '#ffaa1d';
 
 const HeaderLeftBase = styled.div`
   flex-grow: 1;
@@ -40,10 +40,10 @@ const HeaderLeft = ({ user }) => {
     <HeaderLeftBase>
       {user !== '' ? (
         <Link to={`/profile/${user}`}>
-          <h2>GrahamCard</h2>
+          <h2>SolitaireHub</h2>
         </Link>
       ) : (
-        <h2>GrahamCard</h2>
+        <h2>SolitaireHub</h2>
       )}
     </HeaderLeftBase>
   );

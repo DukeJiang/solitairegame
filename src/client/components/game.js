@@ -1,10 +1,5 @@
 /* Copyright G. Hemingway, @2020 - All rights reserved */
 'use strict';
-//how to revert state when clicking on non-card elements?
-//how to select empty stack?
-//how to update server side?
-//how to select multiple cards?
-//game model confusion.
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {Pile} from './pile';
@@ -47,8 +42,8 @@ export const Game = ({ match }) => {
     discard: []
   });
   let [target, setTarget] = useState({card: '', pile: '', cards: []});
-  let [errmsg, setMsg] = useState('');
-  let [winmsg, setWin] = useState('');
+  let [errorMsg, setErrorMsg] = useState('');
+  let [winMsg, setWinMsg] = useState('');
 
   useEffect(() => {
     const getGameState = async () => {
@@ -58,7 +53,7 @@ export const Game = ({ match }) => {
           data.stack2.length === 13 &&
           data.stack3.length === 13 &&
           data.stack4.length === 13 ){
-            setWin(`You win`);
+          setWinMsg(`You win`);
           }
       setState({
         pile1: data.pile1,
@@ -77,46 +72,28 @@ export const Game = ({ match }) => {
       });  
     };
     getGameState();
-    //console.log(target, startDrag);
-  }, [match.params.id, target, errmsg]);
+  }, [match.params.id, target, errorMsg]);
 
-
-  const sendData = async (data) => {
-    let response = await fetch( `/v1/game/${match.params.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        },
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  };
 
   const onClick = async (ev, stack) => {
     ev.stopPropagation();
-    //clicked on empty elements
     if(state[stack].length === 0){
       console.log('empty stack clicked');
       console.log('id is: ', stack);
       if(stack === 'draw'){
         if(target.card === "" && target.pile === "" && target.cards.length === 0){
-          //send request to shuffle all cards back to draw deck
           const data = {
-            card: 'all:cards',
+            card: 'deck',
             src: 'discard',
             dst: 'draw'
           };
-          let resBody = await sendData(data);
-          if(resBody.error){
-            setMsg(resBody.error);
-          }else{
-            setMsg('');
+          let body = await sendRequest(data);
+          if(body.error){
+            setErrorMsg(body.error);
           }
       }
       }
-      //do nothing if nothing is selected
       else if(target.card === "" && target.pile === "" && target.cards.length === 0){
-        setMsg('');
         return;
       } else{
         const data = {
@@ -127,10 +104,10 @@ export const Game = ({ match }) => {
         console.log(data);
         console.log('move request');
 
-        let resBody = await sendData(data);
+        let body = await sendRequest(data);
 
-        if (resBody.error){
-          setMsg(resBody.error);
+        if (body.error){
+          setErrorMsg(body.error);
         }
 
       }
@@ -138,31 +115,45 @@ export const Game = ({ match }) => {
         card:'',
         pile: '',
         cards: []});
-    
     } else{
-    //special case if stack is "draw", set target immediately to empty and send put request, from draw to discard.
-    //let target = ev.target;
-    if(stack === 'draw'){
       if(target.card === "" && target.pile === "" && target.cards.length === 0){
-      console.log('move cards from draw to discard');
+        setTarget({
+          card: ev.target.id,
+          pile: stack,
+          cards: state[stack]
+        });
+      } else{
+        const data = {
+          card: target.card,
+          src: target.pile,
+          dst: stack
+        };
+        console.log(data);
+        //send request to server
+        let resBody = await sendRequest(data);
+        if(resBody.error){
+          setErrorMsg(resBody.error);
+        }
+
+        setTarget({
+          card:'',
+          pile: '',
+          cards: []});
+      }
+
+    if(stack === 'draw'){
+      if( target.cards.length === 0 && target.card === "" && target.pile === ""){
       const data = {
         card: ev.target.id,
         src: 'draw',
         dst: 'discard'
       };
-      let resBody = await sendData(data);
-
-      if (resBody.error){
-          setMsg(resBody.error);
-      } else{
-        setMsg('');
+      let body = await sendRequest(data);
+      if (body.error){
+        setErrorMsg(body.error);
       }
-
-    }
-
-    else{
-      console.log('Cannot move to draw!');
-      setMsg('cannot move to draw!');
+    } else{
+        setErrorMsg('invalid move');
     }
     setTarget({
       card:'',
@@ -170,89 +161,62 @@ export const Game = ({ match }) => {
       cards: []});
   }
 
-
-
-    else if(target.card === "" && target.pile === "" && target.cards.length === 0){
-      console.log('selecting');
-      setTarget({
-        card: ev.target.id,
-        pile: stack,
-        cards: state[stack]
-      });
-      setMsg('');
-    } else{
-      const data = {
-        card: target.card,
-        src: target.pile,
-        dst: stack
-      };
-      console.log(data);
-      console.log('moving cards');
-      //send PUT request
-      let resBody = await sendData(data);
-      if(resBody.error){
-          setMsg(resBody.error);
-      } else{
-        
-            setMsg('');
-      }
-        
-      setTarget({
-        card:'',
-        pile: '',
-        cards: []});
-    }
   }
-    //console.log('click on', ev.target.id);
-  };
-  //write another function onclick
-  const onClick2 = ev => {
-    console.log("gamebase clicked. State initialized");
-    setTarget({card: '', pile: '', cards: []});
-    setMsg('');
   };
 
-  const onAcceptResult = () => {
+  const sendRequest = async (data) => {
+    let response = await fetch( `/v1/game/${match.params.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  };
+
+  const initialize = ev => {
+    setTarget({card: '', pile: '', cards: []});
+  };
+
+  const resultRequest = () => {
     history.push(`/result${match.params.id}`);
   };
 
   return (
-    <GameBase onClick = {onClick2}>
-      {errmsg !== ''?
-      <ErrorMessage msg = {errmsg}/> :
-      null
+    <GameBase onClick = {initialize}>
+      {errorMsg !== ''?
+      <ErrorMessage msg = {setErrorMsg}/> : null
       }
-
-    {winmsg !== '' ? (
-        <ModalNotify
-          id="notification"
-          msg={winmsg}
-          onAccept={onAcceptResult}
-        />
+      {winMsg !== '' ? (
+          <ModalNotify
+              id="notification"
+              msg={"YOU WIN!!!"}
+              onAccept={resultRequest}
+          />
       ) : null}
       
 
       <div>
-        <span><b> ❤️                                                                      💎
-                  ♦️                                                                      ♣️</b></span>
+        <span><b> ---------------♥️️------------------------------ ♦️----------------------------- ♣️ ️------------------------------ ♠️️️ -------------️</b></span>
       </div>
       <CardRow>
-        <Pile cards={state.stack1} spacing={0} onClick={ev=> onClick(ev, 'stack1')} id = 'stack1'/>
-        <Pile cards={state.stack2} spacing={0} onClick={ev=> onClick(ev, 'stack2')} id = 'stack2'/>
-        <Pile cards={state.stack3} spacing={0} onClick={ev=> onClick(ev, 'stack3')} id = 'stack3' />
-        <Pile cards={state.stack4} spacing={0} onClick={ev=> onClick(ev, 'stack4')} id = 'stack4' />
+        <Pile cards={state.stack1} spacing={0} onClick={ev=> onClick(ev, 'stack1')} />
+        <Pile cards={state.stack2} spacing={0} onClick={ev=> onClick(ev, 'stack2')} />
+        <Pile cards={state.stack3} spacing={0} onClick={ev=> onClick(ev, 'stack3')} />
+        <Pile cards={state.stack4} spacing={0} onClick={ev=> onClick(ev, 'stack4')} />
         <CardRowGap />
-        <Pile cards={state.draw} spacing={0} onClick={ev=> onClick(ev, 'draw')} id = 'draw'/>
-        <Pile cards={state.discard} spacing={0} onClick={ev=> onClick(ev, 'discard')} id = 'discard'/>
+        <Pile cards={state.draw} spacing={0} onClick={ev=> onClick(ev, 'draw')} />
+        <Pile cards={state.discard} spacing={0} onClick={ev=> onClick(ev, 'discard')} />
       </CardRow>
       <CardRow>
-        <Pile cards={state.pile1} onClick={ev=> onClick(ev, 'pile1')} id = 'pile1'/>
-        <Pile cards={state.pile2} onClick={ev=> onClick(ev, 'pile2')} id = 'pile2'/>
-        <Pile cards={state.pile3} onClick={ev=> onClick(ev, 'pile3')} id = 'pile3'/>
-        <Pile cards={state.pile4} onClick={ev=> onClick(ev, 'pile4')} id = 'pile4'/>
-        <Pile cards={state.pile5} onClick={ev=> onClick(ev, 'pile5')} id = 'pile5'/>
-        <Pile cards={state.pile6} onClick={ev=> onClick(ev, 'pile6')} id = 'pile6'/>
-        <Pile cards={state.pile7} onClick={ev=> onClick(ev, 'pile7')} id = 'pile7'/>
+        <Pile cards={state.pile1} onClick={ev=> onClick(ev, 'pile1')} />
+        <Pile cards={state.pile2} onClick={ev=> onClick(ev, 'pile2')} />
+        <Pile cards={state.pile3} onClick={ev=> onClick(ev, 'pile3')} />
+        <Pile cards={state.pile4} onClick={ev=> onClick(ev, 'pile4')} />
+        <Pile cards={state.pile5} onClick={ev=> onClick(ev, 'pile5')} />
+        <Pile cards={state.pile6} onClick={ev=> onClick(ev, 'pile6')} />
+        <Pile cards={state.pile7} onClick={ev=> onClick(ev, 'pile7')} />
       </CardRow>
     </GameBase>
   );
