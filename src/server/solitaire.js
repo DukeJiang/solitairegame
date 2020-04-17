@@ -199,22 +199,26 @@ let validateMove = (state, request, drawCount) => {
         }
       }
 
+      let add_array = state[request.src].slice(index);
       state[request.src] = state[request.src].slice(0, index);
           if(state[request.src].length !== 0){
             state[request.src][state[request.src].length -1].up = true;
       }
-      state[request.dst] = state[request.dst].concat(state[request.src].slice(index));
-      moveRequest.cards = state[request.src].slice(index);
-      score += 5;
+
+      state[request.dst] = state[request.dst].concat(add_array);
+      score = 5;
+      moveRequest.cards = add_array;
       return {state: state, score: score, move: moveRequest};
     }
+
     else{
       if(srcPile[srcPile.length - 1].suit !== suite || srcPile[srcPile.length - 1].value !== value){
         return {error: 'Wrong card, not matched'};
       }
-      const cardSelected = state[request.src].pop();
-      state[request.dst].push(cardSelected);
-      moveRequest.cards.push(cardSelected);
+
+      const card_moved = state[request.src].pop();
+      state[request.dst].push(card_moved);
+      moveRequest.cards.push(card_moved);
 
     score = request.dst === 'discard'? 5: -15;
 
